@@ -1,0 +1,96 @@
+<!doctype html>
+<html><head><title>d3 experiments</title>
+<meta charset="utf-8">
+<style>
+
+</style>
+<!--
+lib='./path/to/js/lib'
+
+if [ ! -f $lib/d3.js ]; then
+	echo 'get d3'
+	curl https://raw.githubusercontent.com/mbostock/d3/master/d3.js -o $lib/d3.js
+fi
+
+-->
+</head><body>
+<section class=one></section>
+<section>
+
+</section>
+<section></section>
+<section></section>
+<section></section>
+
+<script src="d3.js"></script>
+<script>
+'use strict'
+
+var one;
+var util = {
+	range: function(length, min, max){
+		var set = [], i, m;
+		min = Number( min );
+		max = Number( max );
+		i = 0;
+		m = max - min + 1;
+
+		length = Math.abs( length );
+		while( i < length ){
+			set.push( Math.random() * m + min );
+		};
+
+		return set;
+	}
+};
+
+(one = {
+	model: { }
+	,go: function(){
+		var set;
+		// range( start, end, steps )
+		set = this.model.set = d3.range(8, 124, .5);
+
+		var w = 2, ht = 280;
+		var svg = d3.select('.one').append('svg');
+		svg.datum( set ).attr('width',300).attr('height',ht);
+		
+
+		// TODO when the range changes recreate and reapply y
+		var y = d3.scale.linear()
+			.domain([ set[0], set[set.length-1] ])
+			.range([0, ht])
+		;
+		y.clamp(true);
+		y.nice();
+		// use: y.ticks(2)
+
+		var colorScale = d3.scale.category20c();
+
+		svg.selectAll('rect')
+		.data(function(d){ return d; })
+		.enter()
+		.append('rect')
+		.attr('width', w)
+		.attr('height', y)
+		.attr('x', function(d, i){
+			return i * w;
+		})
+		.attr('y', function(d){
+			return ht - y(d);
+		})
+		;
+	}
+
+}).go();
+</script>
+
+<script>
+/// TEST
+var assert = function assertion(){
+	return console.assert.apply(console, arguments);
+};
+assert(util.range().length === 0, 'handles no args');
+assert(util.range().length === 0, 'handles no args');
+</script>
+</body></html>
