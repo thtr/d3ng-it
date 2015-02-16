@@ -3,7 +3,7 @@ angular.module('d3ngit', ['ngRoute'])
 .run(function($templateCache){
 	var path, template = {
 		'app.html': '<section ng-repeat="template in content track by $index" title="{{params.view}}"><span ng-include src="template"></span></section>'
-		,'home.html': "<p>home</p>"
+		,'home.html': "<p>home: for more just <a href='#/stuff?and=things'>add something to the path</a></p>"
 		,"params.html":"<h1>params</h1><style>.codex code{display:block;}</style><div class=codex><code ng-repeat='(key, val) in params track by $index'>{{key}}: {{val}}</code></div>"
 		,'404.html': "<p>Sorry, couldn't find <a href='{{url}}'><code>{{url}}</code></a></p>"
 	};
@@ -89,10 +89,36 @@ angular.module('d3ngit', ['ngRoute'])
 		}
 		,link: function(scope, elem, attrs){
 		// create the view
-			var svg;
+			var $svg;
+
 			// setup visualization initially
-			scope.render = function(){
+			scope.render = function(model, old, scope){
+
 				// render the data when it changes
+				var bar = d3.select('#svg-'+scope.id).selectAll('.bar').data(model || []);
+
+				var y = d3.scale.linear()
+					.domain([ model[0], model[model.length-1] ])
+					.range([0, scope.svg.height.value])
+				;
+
+				bar
+				.enter()
+				.append('rect').attr('class','bar')
+				.attr('width',2)
+				.attr('height',2)
+				.attr('x',function(d,i,a){
+console.log('x',a);
+					return i// * w;
+				})
+				.attr('y',function(d,i){
+					return i// * h;
+				})
+
+				bar.exit().each(function(d,i){
+					console.log('<exit '+i+'>',d);
+				})
+				.remove();
 			};
 
 			scope.svg = {
@@ -101,11 +127,12 @@ angular.module('d3ngit', ['ngRoute'])
 			};
 
 			// TODO improve so that values can be dynamically adjusted (via scope.$watch or attrs.$observe then set attribute to value)
-			var $svg = $compile(
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="vis-sample-{{id}}" viewBox="0 0 {{svg.width.value}} {{svg.height.value}}" preserveAspectRatio="xMidYMid meet"></svg>')( scope )
+			$svg = $compile(
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" viewBox="0 0 {{svg.width.value}} {{svg.height.value}}" preserveAspectRatio="xMidYMid meet"></svg>')( scope )
 			)( scope );
 
-			// ? d3.select( svg[0] ).datum( scope.model );
+			// ?? is this the best solution?
+			d3.select( $svg[0] ).datum( scope.model );
 
 			elem.append( $svg );
 
