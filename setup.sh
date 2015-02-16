@@ -36,7 +36,7 @@ echo 'update har loader'
 curl https://raw.githubusercontent.com/thtr/harharhar/master/harharhar.js -o $lib/harharhar.js
 
 echo 'fix permissions'
-chmod -R go+r ui
+chmod -R go+r $lib
 
 echo 'all done'
 
