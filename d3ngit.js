@@ -58,11 +58,31 @@ angular.module('d3ngit', ['ngRoute'])
 	return {
 		restrict: 'E'
 		,scope: true
-		,template: '<form ng-submit="adjust()"><label for="w-{{id}}">width {{svg.width.value}}</label><input type=range min="{{svg.width.min}}" max="{{svg.width.max}}" step="{{svg.width.step}}" ng-model="svg.width.value" ></form>'
+		,template: '<form ng-submit="adjust()" class=transformit><style>.transformit code{width:3em;text-align:right;overflow:auto;display:inline-block;border:1px solid #ddd;}</style>'
+			+'<br><select ng-model="svg.xAspect" ng-options="x for x in svg.preserveAspectRatio.x"></select>'
+			+'<br><select ng-model="svg.yAspect" ng-options="y for y in svg.preserveAspectRatio.y"></select>'
+			+'<br><select ng-model="svg.clip" ng-options="c for c in svg.preserveAspectRatio.c"></select>'
+			+'<br><label for="w-{{id}}">width <code>{{svg.width.value}}</code></label><input id="w-{{id}}" type=range min="{{svg.width.min}}" max="{{svg.width.max}}" step="{{svg.width.step}}" ng-model="svg.width.value" >'
+			+'<br><label for="h-{{id}}">height <code>{{svg.height.value}}</code></label><input id="h-{{id}}" type=range min="{{svg.height.min}}" max="{{svg.height.max}}" step="{{svg.height.step}}" ng-model="svg.height.value" >'
+			+'</form>'
 		,controller: function($scope){
 		// init the model
 			$scope.id = 'vis-'+$scope.$id;
 			$scope.model = d3.range(8, 876, 3);
+
+			var spaces = /\s+/;
+			$scope.svg = {
+				preserveAspectRatio: {
+					x: 'xMin xMid xMax'.split(spaces)
+					,y: 'YMin YMid YMax'.split(spaces)
+					,c: 'meet slice'.split(spaces)
+				}
+				,width: {value: 350, min: 20, max: 900, step: 10}
+				,height: {value: 300, min: 20, max: 700, step: 10}
+			};
+			$scope.svg.xAspect = $scope.svg.preserveAspectRatio.x[1];
+			$scope.svg.yAspect = $scope.svg.preserveAspectRatio.y[1];
+			$scope.svg.clip = $scope.svg.preserveAspectRatio.c[0];
 
 			$scope.valid = function(dimension){
 				var n = Number(dimension.value) || 0;
@@ -78,6 +98,7 @@ angular.module('d3ngit', ['ngRoute'])
 				for(key in dimensions){
 					old = ((previous||{})[key] || {}).value;
 					dimension = dimensions[key];
+					if(!dimension.value) continue;
 					$scope.valid(dimension);
 					nu = dimension.value;
 					if(nu === old) continue;
@@ -121,14 +142,9 @@ console.log('x',a);
 				.remove();
 			};
 
-			scope.svg = {
-				width: {value: 350, min: 200, max: 700, step: 10}
-				,height:{value: 300, min: 200, max: 400, step: 10}
-			};
-
 			// TODO improve so that values can be dynamically adjusted (via scope.$watch or attrs.$observe then set attribute to value)
 			$svg = $compile(
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" viewBox="0 0 {{svg.width.value}} {{svg.height.value}}" preserveAspectRatio="xMidYMid meet"></svg>')( scope )
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" viewBox="0 0 {{svg.width.value}} {{svg.height.value}}"></svg>')( scope )
 			)( scope );
 
 			// ?? is this the best solution?
@@ -144,8 +160,10 @@ console.log('x',a);
 					.attr('width', svg.width.value)
 					.attr('height', svg.height.value)
 					.attr('viewBox', '0 0 '+svg.width.value+' '+svg.height.value)
+					.attr('preserveAspectRatio', svg.xAspect + svg.yAspect + ' ' + svg.clip)
 
-				elem.find('input').prop('value',scope.svg.width.value);
+				document.getElementById('w-'+scope.id).value = scope.svg.width.value;
+				document.getElementById('h-'+scope.id).value = scope.svg.height.value;
 			}, true);
 
 			scope.$watchCollection('model', scope.render);
