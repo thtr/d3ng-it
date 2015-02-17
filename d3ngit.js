@@ -63,12 +63,24 @@ angular.module('d3ngit', ['ngRoute'])
 			+'<br><select ng-model="svg.yAspect" ng-options="y for y in svg.preserveAspectRatio.y"></select>'
 			+'<br><select ng-model="svg.clip" ng-options="c for c in svg.preserveAspectRatio.c"></select>'
 			+'<br><label for="w-{{id}}">width <code>{{svg.width.value}}</code></label><input id="w-{{id}}" type=range min="{{svg.width.min}}" max="{{svg.width.max}}" step="{{svg.width.step}}" ng-model="svg.width.value" >'
+			+'<br><button ng-click="resetter($event)">reset data</button>'
 			+'<br><label for="h-{{id}}">height <code>{{svg.height.value}}</code></label><input id="h-{{id}}" type=range min="{{svg.height.min}}" max="{{svg.height.max}}" step="{{svg.height.step}}" ng-model="svg.height.value" >'
 			+'</form>'
 		,controller: function($scope){
 		// init the model
 			$scope.id = 'vis-'+$scope.$id;
-			$scope.model = d3.range(8, 876, 3);
+
+			$scope.reset = function(){
+				$scope.model = d3.shuffle( d3.range(
+					54, 543, 2
+				) );
+console.log($scope.model);
+			};
+window.s = $scope
+			$scope.resetter = function(evt){
+				this.$$phase ? $scope.reset() : this.$apply( $scope.reset );
+			};
+			$scope.reset();
 
 			var spaces = /\s+/;
 			$scope.svg = {
@@ -79,6 +91,7 @@ angular.module('d3ngit', ['ngRoute'])
 				}
 				,width: {value: 350, min: 20, max: 900, step: 10}
 				,height: {value: 300, min: 20, max: 700, step: 10}
+				,color: d3.scale.category20c()
 			};
 			$scope.svg.xAspect = $scope.svg.preserveAspectRatio.x[1];
 			$scope.svg.yAspect = $scope.svg.preserveAspectRatio.y[1];
@@ -111,44 +124,58 @@ angular.module('d3ngit', ['ngRoute'])
 		,link: function(scope, elem, attrs){
 		// create the view
 			var $svg;
-
+			scope.defer = 0;
 			// setup visualization initially
 			scope.render = function(model, old, scope){
 
+console.log('model>',model);
 				// render the data when it changes
-				var bar = d3.select('#svg-'+scope.id).selectAll('.bar').data(model || []);
+				var bar = d3.select('#svg-'+scope.id).select('.bar-chart').selectAll('.bar').data(model || []);
 
 				var y = d3.scale.linear()
 					.domain([ model[0], model[model.length-1] ])
-					.range([0, scope.svg.height.value])
-				;
-				y.clamp(true);
-				y.nice();
-				// use: y.ticks(2)
+					.range([0, scope.svg.height.value - 50])
+					.clamp(true)
+					.nice()
+
+				var ticks = y.ticks(2);
 
 				var w = 2, h = scope.svg.height.value;
 
+				// enter() for initializing un-changing values
 				bar
 				.enter()
 				.append('rect').attr('class','bar')
 				.attr('width',w)
-				.attr('height',y)
 				.attr('x',function(d,i,a){
 					return (i * w);
 				})
+				.each(function(d,i){
+if(i<10) console.log('<enter '+i+'>',d);
+				})
+
+				// update
+				bar
+				.attr('height',y)
 				.attr('y',function(d,i){
 					return (h - y(d));
 				})
+				.each(function(d,i){
+if(i<10) console.log('<update '+i+'>',d);
+				})
 
+				// exit
 				bar.exit().each(function(d,i){
 					console.log('<exit '+i+'>',d);
 				})
 				.remove();
 			};
 
-			// TODO improve so that values can be dynamically adjusted (via scope.$watch or attrs.$observe then set attribute to value)
+
+			// TODO move edit to attribute directive generalized for svg element types and corresponding attributes
+
 			$svg = $compile(
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ></svg>')( scope )
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"></g></svg>')( scope )
 			)( scope );
 
 			// ?? is this the best solution?
@@ -168,6 +195,7 @@ angular.module('d3ngit', ['ngRoute'])
 
 				document.getElementById('w-'+scope.id).value = scope.svg.width.value;
 				document.getElementById('h-'+scope.id).value = scope.svg.height.value;
+
 			}, true);
 
 			scope.$watchCollection('model', scope.render);
