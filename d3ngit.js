@@ -122,6 +122,10 @@ angular.module('d3ngit', ['ngRoute'])
 					.domain([ model[0], model[model.length-1] ])
 					.range([0, scope.svg.height.value])
 				;
+				y.clamp(true);
+				y.nice();
+				// use: y.ticks(2)
+
 				var w = 2, h = scope.svg.height.value;
 
 				bar
