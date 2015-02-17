@@ -122,18 +122,18 @@ angular.module('d3ngit', ['ngRoute'])
 					.domain([ model[0], model[model.length-1] ])
 					.range([0, scope.svg.height.value])
 				;
+				var w = 2, h = scope.svg.height.value;
 
 				bar
 				.enter()
 				.append('rect').attr('class','bar')
-				.attr('width',2)
-				.attr('height',2)
+				.attr('width',w)
+				.attr('height',y)
 				.attr('x',function(d,i,a){
-console.log('x',a);
-					return i// * w;
+					return (i * w);
 				})
 				.attr('y',function(d,i){
-					return i// * h;
+					return (h - y(d));
 				})
 
 				bar.exit().each(function(d,i){
@@ -144,7 +144,7 @@ console.log('x',a);
 
 			// TODO improve so that values can be dynamically adjusted (via scope.$watch or attrs.$observe then set attribute to value)
 			$svg = $compile(
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" viewBox="0 0 {{svg.width.value}} {{svg.height.value}}"></svg>')( scope )
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ></svg>')( scope )
 			)( scope );
 
 			// ?? is this the best solution?
