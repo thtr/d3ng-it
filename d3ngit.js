@@ -151,7 +151,7 @@ angular.module('d3ngit', ['ngRoute'])
 					return (i * w);
 				})
 				.each(function(d,i){
-					if(i<10) console.log('<enter '+i+'>',d);
+			//		if(i<3) console.log('<enter '+i+'>',d);
 				})
 
 				// update
@@ -161,12 +161,13 @@ angular.module('d3ngit', ['ngRoute'])
 					return (h - y(d));
 				})
 				.each(function(d,i){
-					if(i<10) console.log('<update '+i+'>',d);
+				//	if(i<3) console.log('<update '+i+'>',d);
 				})
 
 				// exit
-				bar.exit().each(function(d,i){
-					if(i<10) console.log('<exit '+i+'>',d);
+				bar.exit()
+				.each(function(d,i){
+			//		if(i<3) console.log('<exit '+i+'>',d);
 				})
 				.remove();
 			};
