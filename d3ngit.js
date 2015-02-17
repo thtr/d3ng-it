@@ -72,11 +72,12 @@ angular.module('d3ngit', ['ngRoute'])
 
 			$scope.reset = function(){
 				$scope.model = d3.shuffle( d3.range(
-					54, 543, 2
+				// min, max, step
+					54, (Math.random() * (543 - 300 + 1) + 300), (Math.random() * (10 - 1 + 1) + 1)
 				) );
-console.log($scope.model);
+				console.log($scope.model.length, $scope.model);
 			};
-window.s = $scope
+
 			$scope.resetter = function(evt){
 				this.$$phase ? $scope.reset() : this.$apply( $scope.reset );
 			};
@@ -128,7 +129,6 @@ window.s = $scope
 			// setup visualization initially
 			scope.render = function(model, old, scope){
 
-console.log('model>',model);
 				// render the data when it changes
 				var bar = d3.select('#svg-'+scope.id).select('.bar-chart').selectAll('.bar').data(model || []);
 
@@ -151,7 +151,7 @@ console.log('model>',model);
 					return (i * w);
 				})
 				.each(function(d,i){
-if(i<10) console.log('<enter '+i+'>',d);
+					if(i<10) console.log('<enter '+i+'>',d);
 				})
 
 				// update
@@ -161,12 +161,12 @@ if(i<10) console.log('<enter '+i+'>',d);
 					return (h - y(d));
 				})
 				.each(function(d,i){
-if(i<10) console.log('<update '+i+'>',d);
+					if(i<10) console.log('<update '+i+'>',d);
 				})
 
 				// exit
 				bar.exit().each(function(d,i){
-					console.log('<exit '+i+'>',d);
+					if(i<10) console.log('<exit '+i+'>',d);
 				})
 				.remove();
 			};
