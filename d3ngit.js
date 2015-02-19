@@ -71,9 +71,17 @@ angular.module('d3ngit', ['ngRoute'])
 			$scope.id = 'vis-'+$scope.$id;
 
 			$scope.reset = function(){
+console.clear();
+				$scope.bounds = {
+					min: 54, max: Math.round(Math.random() * (543 - 300 + 1) + 300), step: Math.round(Math.random() * (10 - 1 + 1) + 1)
+				};
+				var bounds = $scope.bounds;
+				bounds.magnitude = bounds.max - bounds.min;
+
+//
 				$scope.model = d3.shuffle( d3.range(
 				// min, max, step
-					54, (Math.random() * (543 - 300 + 1) + 300), (Math.random() * (10 - 1 + 1) + 1)
+					bounds.min, bounds.max, bounds.step
 				) );
 				console.log($scope.model.length, $scope.model);
 			};
@@ -91,7 +99,7 @@ angular.module('d3ngit', ['ngRoute'])
 					,c: 'meet slice'.split(spaces)
 				}
 				,width: {value: 350, min: 20, max: 900, step: 10}
-				,height: {value: 300, min: 20, max: 700, step: 10}
+				,height: {value: 350, min: 20, max: 700, step: 10}
 				,color: d3.scale.category20c()
 			};
 			$scope.svg.xAspect = $scope.svg.preserveAspectRatio.x[1];
@@ -125,60 +133,82 @@ angular.module('d3ngit', ['ngRoute'])
 		,link: function(scope, elem, attrs){
 		// create the view
 			var $svg;
-			scope.defer = 0;
+
+			scope.yAxis = d3.svg.axis();
+
 			// setup visualization initially
 			scope.render = function(model, old, scope){
 
 				// render the data when it changes
-				var bar = d3.select('#svg-'+scope.id).select('.bar-chart').selectAll('.bar').data(model || []);
+				var chart = d3.select('#svg-'+scope.id).select('.bar-chart').attr('transform','translate(10,10)');
+				var bar = chart.select('.bars').selectAll('.bar').data(model || []);
+
+				var extent = d3.extent(model);
+				scope.min = extent[0];
+				scope.max = extent[1];
+
+				var width = 300;
+				// at least 1px for each bar
+				if( model.length > width) width = model.length;
+				var barWidth = Math.round(width / model.length);
+				var height = 300;
+
+				// fit the model items into the available width
+				// fix as bands
+				var x = d3.scale.linear()
+					.domain([ 0, model.length - 1 ])
+					.rangeRound([ 0, width ])
+					.nice()
 
 				var y = d3.scale.linear()
-					.domain([ model[0], model[model.length-1] ])
-					.range([0, scope.svg.height.value - 50])
+					.domain([ scope.bounds.min, scope.bounds.max ])
+					.range([height, 0])
 					.clamp(true)
 					.nice()
 
-				var ticks = y.ticks(2);
+				var yAxis = scope.yAxis.scale(y).orient('right');
 
-				var w = 2, h = scope.svg.height.value;
 
 				// enter() for initializing un-changing values
 				bar
 				.enter()
-				.append('rect').attr('class','bar')
-				.attr('width',w)
-				.attr('x',function(d,i,a){
-					return (i * w);
-				})
-				.each(function(d,i){
-			//		if(i<3) console.log('<enter '+i+'>',d);
-				})
+				.append('rect').attr('class',function(d,i){
+					return 'bar bar'+i;
+				});
 
 				// update
 				bar
+				.attr('width',barWidth)
+				.attr('x',function(d,i){
+					return i * barWidth;
+				})
 				.attr('height',y)
 				.attr('y',function(d,i){
-					return (h - y(d));
+					return (height - y(d));
 				})
-				.each(function(d,i){
-				//	if(i<3) console.log('<update '+i+'>',d);
+				.attr('d',function(d,i){
+					return d.toFixed(1)
 				})
 
 				// exit
-				bar.exit()
-				.each(function(d,i){
-			//		if(i<3) console.log('<exit '+i+'>',d);
-				})
-				.remove();
+				bar.exit().remove();
+
+				chart.select('.y-axis').call(yAxis).attr('transform','translate('+((model.length + 1) * barWidth)+', 0)');
+
 			};
 
 
 			// TODO move edit to attribute directive generalized for svg element types and corresponding attributes
 
 			$svg = $compile(
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"></g></svg>')( scope )
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g></g></svg>')( scope )
 			)( scope );
 
+			$svg.on('mouseover',function(e){
+				if(e.target.nodeName !== 'rect') return;
+				
+			});
+debugger
 			// ?? is this the best solution?
 			d3.select( $svg[0] ).datum( scope.model );
 
