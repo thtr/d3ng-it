@@ -136,6 +136,10 @@ console.clear();
 
 			scope.yAxis = d3.svg.axis();
 
+			scope.farRight = function(){
+				return (this.model.length + 1) * this.barWidth;
+			};
+
 			// setup visualization initially
 			scope.render = function(model, old, scope){
 
@@ -151,6 +155,7 @@ console.clear();
 				// at least 1px for each bar
 				if( model.length > width) width = model.length;
 				var barWidth = Math.round(width / model.length);
+				scope.barWidth = barWidth;
 				var height = 300;
 
 				// fit the model items into the available width
@@ -168,6 +173,8 @@ console.clear();
 
 				var yAxis = scope.yAxis.scale(y).orient('right');
 
+				scope.x = x;
+				scope.y = y;
 
 				// enter() for initializing un-changing values
 				bar
@@ -193,7 +200,10 @@ console.clear();
 				// exit
 				bar.exit().remove();
 
-				chart.select('.y-axis').call(yAxis).attr('transform','translate('+((model.length + 1) * barWidth)+', 0)');
+				var r = scope.farRight();
+				d3.select('#line-svg-'+scope.id).attr('x1',0).attr('x2',r).attr('y1',height).attr('y2',height)
+
+				chart.select('.y-axis').call(yAxis).attr('transform','translate('+ r +', 0)');
 
 			};
 
@@ -201,14 +211,16 @@ console.clear();
 			// TODO move edit to attribute directive generalized for svg element types and corresponding attributes
 
 			$svg = $compile(
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g></g></svg>')( scope )
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g><line id="line-svg-{{id}}"></line></g></svg>')( scope )
 			)( scope );
 
 			$svg.on('mouseover',function(e){
 				if(e.target.nodeName !== 'rect') return;
+				var y = d3.select(e.target).attr('y');
+				d3.select(document.getElementById('line-'+this.id)).attr('y1',y).attr('y2',y);
 				
 			});
-debugger
+
 			// ?? is this the best solution?
 			d3.select( $svg[0] ).datum( scope.model );
 
