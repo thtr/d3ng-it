@@ -54,7 +54,7 @@ angular.module('d3ngit', ['ngRoute'])
 .factory('d3', function(){
 	return window.d3;
 })
-.directive('visSample', function($compile, $interpolate, d3){
+.directive('visiBar', function($compile, $interpolate, d3){
 	return {
 		restrict: 'E'
 		,scope: true
@@ -98,8 +98,8 @@ console.clear();
 					,y: 'YMin YMid YMax'.split(spaces)
 					,c: 'meet slice'.split(spaces)
 				}
-				,width: {value: 350, min: 20, max: 900, step: 10}
-				,height: {value: 350, min: 20, max: 700, step: 10}
+				,width: {value: 800, min: 20, max: 900, step: 10}
+				,height: {value: 700, min: 20, max: 700, step: 10}
 				,color: d3.scale.category20c()
 			};
 			$scope.svg.xAspect = $scope.svg.preserveAspectRatio.x[1];
@@ -196,6 +196,9 @@ console.clear();
 				.attr('d',function(d,i){
 					return d;
 				})
+				.each(function(d,i){
+					this.classList.remove('active');
+				})
 
 				// exit
 				bar.exit().remove();
@@ -212,17 +215,21 @@ console.clear();
 
 			};
 
-
 			// TODO move edit to attribute directive generalized for svg element types and corresponding attributes
 
 			$svg = $compile(
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g><g class="line-indicator" id="line-svg-{{id}}"><line></line><text dy=".32em" style="text-anchor: end;"></text></g></g></svg>')( scope )
+				// angular messes up camelCase attributes (camelCase becomes camelcase) so $interpolate first
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="visi-bar" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g><g class="line-indicator" id="line-svg-{{id}}"><line></line><text dy=".32em" style="text-anchor: end;"></text></g></g></svg>')( scope )
 			)( scope );
 
 			scope.setIndicator = function(x, y, d, d3el){
 				d3el.attr('style','transform:translate(0,-'+y+'px);').select('text').text(d).attr('x', x);
 			};
 
+			$svg.on('click', function(e){
+				if(e.target.nodeName !== 'rect') return;
+				e.target.classList.toggle('active');
+			});
 			$svg.on('mouseover',function(e){
 				var el, y, x;
 				if(e.target.nodeName !== 'rect') return;
