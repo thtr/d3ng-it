@@ -189,12 +189,12 @@ console.clear();
 				.attr('x',function(d,i){
 					return i * barWidth;
 				})
-				.attr('height',y)
-				.attr('y',function(d,i){
-					return (height - y(d));
+				.attr('height',function(d){
+					return height - y(d);
 				})
+				.attr('y',y)
 				.attr('d',function(d,i){
-					return d.toFixed(1)
+					return d;
 				})
 
 				// exit
@@ -203,7 +203,8 @@ console.clear();
 				var r = scope.farRight();
 				var l = d3.select('#line-svg-'+scope.id);
 
-				l.select('text').attr('x',r+10).attr('y',height).attr('style','dominant-baseline:ideographic;text-shadow:0 0 8px #fff;fill:red;')
+				l.select('text').attr('y',height).attr('style','dominant-baseline:ideographic;text-shadow:0 0 8px #fff;fill:red;');
+				scope.setIndicator(0, 0, '', l)
 
 				l.select('line').attr('x1',0).attr('x2',r).attr('y1',height).attr('y2',height).attr('style','opacity:0.3;')
 
@@ -218,15 +219,20 @@ console.clear();
 				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g><g class="line-indicator" id="line-svg-{{id}}"><line></line><text dy=".32em" style="text-anchor: end;"></text></g></g></svg>')( scope )
 			)( scope );
 
+			scope.setIndicator = function(x, y, d, d3el){
+				d3el.attr('style','transform:translate(0,-'+y+'px);').select('text').text(d).attr('x', x);
+			};
+
 			$svg.on('mouseover',function(e){
 				var el, y, x;
 				if(e.target.nodeName !== 'rect') return;
 				el = d3.select(e.target);
-				x = +el.attr('x');
-				y = +el.attr('height');
-
-				d3.select(document.getElementById('line-'+this.id)).attr('style','transform:translate(0,-'+y+'px);')
-				.select('text').text(el.attr('d')).attr('x', x);
+				e.view.angular.element(this).scope().setIndicator(
+					+el.attr('x')
+					,+el.attr('height')
+					,el.attr('d')
+					,d3.select('#line-'+this.id)
+				);
 			});
 
 			// ?? is this the best solution?
