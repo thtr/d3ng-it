@@ -201,7 +201,11 @@ console.clear();
 				bar.exit().remove();
 
 				var r = scope.farRight();
-				d3.select('#line-svg-'+scope.id).attr('x1',0).attr('x2',r).attr('y1',height).attr('y2',height)
+				var l = d3.select('#line-svg-'+scope.id);
+
+				l.select('text').attr('x',r+10).attr('y',height).attr('style','dominant-baseline:ideographic;text-shadow:0 0 8px #fff;fill:red;')
+
+				l.select('line').attr('x1',0).attr('x2',r).attr('y1',height).attr('y2',height).attr('style','opacity:0.3;')
 
 				chart.select('.y-axis').call(yAxis).attr('transform','translate('+ r +', 0)');
 
@@ -211,14 +215,18 @@ console.clear();
 			// TODO move edit to attribute directive generalized for svg element types and corresponding attributes
 
 			$svg = $compile(
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g><line id="line-svg-{{id}}"></line></g></svg>')( scope )
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="vis-sample" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g><g class="line-indicator" id="line-svg-{{id}}"><line></line><text dy=".32em" style="text-anchor: end;"></text></g></g></svg>')( scope )
 			)( scope );
 
 			$svg.on('mouseover',function(e){
+				var el, y, x;
 				if(e.target.nodeName !== 'rect') return;
-				var y = d3.select(e.target).attr('y');
-				d3.select(document.getElementById('line-'+this.id)).attr('y1',y).attr('y2',y);
-				
+				el = d3.select(e.target);
+				x = +el.attr('x');
+				y = +el.attr('height');
+
+				d3.select(document.getElementById('line-'+this.id)).attr('style','transform:translate(0,-'+y+'px);')
+				.select('text').text(el.attr('d')).attr('x', x);
 			});
 
 			// ?? is this the best solution?
