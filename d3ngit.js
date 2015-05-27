@@ -3,7 +3,7 @@ angular.module('d3ngit', ['ngRoute'])
 .run(function($templateCache){
 	var path, template = {
 		'app.html': '<section ng-repeat="template in content track by $index" title="{{params.view}}"><span ng-include src="template"></span></section>'
-		,'home.html': "<p>home: for more just <a href='#/stuff?and=things'>add something to the path</a></p>"
+		,'home.html': "<p style='margin:8em;font-size:large;'>home: for more just <a href='#/stuff?and=things'>add something to the path</a></p>"
 		,"params.html":"<h1>params</h1><style>.codex code{display:block;}</style><div class=codex><code ng-repeat='(key, val) in params track by $index'>{{key}}: {{val}}</code></div>"
 		,'404.html': "<p>Sorry, couldn't find <a href='{{url}}'><code>{{url}}</code></a></p>"
 	};
@@ -78,7 +78,7 @@ angular.module('d3ngit', ['ngRoute'])
 				preserveAspectRatio: {
 					x: 'xMin xMid xMax'.split(spaces)
 					,y: 'YMin YMid YMax'.split(spaces)
-					,c: 'meet slice'.split(spaces)
+					,c: 'slice meet none'.split(spaces)
 				}
 				,width: {value: 800, min: 20, max: 900, step: 10}
 				,height: {value: 700, min: 20, max: 700, step: 10}
@@ -174,10 +174,11 @@ angular.module('d3ngit', ['ngRoute'])
 			};
 
 			// TODO move edit to attribute directive generalized for svg element types and corresponding attributes
-
+console.log('$compile->$interpolate');
 			$svg = $compile(
 				// angular messes up camelCase attributes (camelCase becomes camelcase) so $interpolate first
-				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="visi-bar" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g><g class="line-indicator" id="line-svg-{{id}}"><line></line><text dy=".32em" style="text-anchor: end;"></text></g></g></svg>')( scope )
+				$interpolate('<svg width="{{svg.width.value}}" height="{{svg.height.value}}" class="visi-bar" id="svg-{{id}}" ><g class="bar-chart"><g class="bars"></g><g class="axis y-axis"></g><g class="line-indicator" id="line-svg-{{id}}"><line></line><text dy=".32em" style="text-anchor: end;"></text></g></g>'
+	+ '<g class="smiley"><rect width="180" height="240" fill="#666666"></rect> <circle cx="90" cy="120" r="60" fill="yellow" stroke="red" stroke-width="2"></circle> <circle cx="68" cy="105" r="14" fill="black"></circle> <circle cx="112" cy="105" r="14" fill="black"></circle> <path d="M 50 140 A 50 50 0 0 0 130 140" fill="black" stroke="none"></path> </g> </svg>')( scope )
 			)( scope );
 
 			scope.setIndicator = function(x, y, d, d3el){
@@ -225,7 +226,7 @@ angular.module('d3ngit', ['ngRoute'])
 	};
 })
 .factory('visUtil', function(d3){
-	var util = {
+	var visUtil = {
 		random: function randomizing(min, max){
 			min = min || 0;
 			max = (typeof(max) === 'number' && max >= min) ? max : min;
@@ -233,7 +234,7 @@ angular.module('d3ngit', ['ngRoute'])
 		}
 		,reset: function resetting(bounds){
 			bounds = angular.extend({
-				min: Math.round(util.random(0, 50)), max: Math.round(util.random(300, 543)), step: Math.round(util.random(1, 10))
+				min: Math.round(visUtil.random(0, 50)), max: Math.round(visUtil.random(300, 543)), step: Math.round(visUtil.random(1, 10))
 			}, bounds);
 
 			bounds.magnitude = bounds.max - bounds.min;
@@ -244,7 +245,7 @@ angular.module('d3ngit', ['ngRoute'])
 		// assuming this is attached to a scope, so this===scope instance
 
 			var bounds;
-			bounds = this.bounds = util.reset();
+			bounds = this.bounds = visUtil.reset();
 			
 			this.model = d3.shuffle( d3.range(
 			// min, max, step
@@ -263,7 +264,7 @@ angular.module('d3ngit', ['ngRoute'])
 
 			dimension.value = n;
 		}
-		,validAdjustments = function(dimensions, previous){
+		,validAdjustments: function(dimensions, previous){
 				var dimension, key, old, nu, changes = {length:0}, was;
 				for(key in dimensions){
 					old = ((previous||{})[key] || {}).value;
@@ -279,7 +280,7 @@ angular.module('d3ngit', ['ngRoute'])
 		}
 	};
 
-	return util;
+	return visUtil;
 })
 .directive('visiWheel',function($compile, $interpolate, d3, visUtil){
 	return {
@@ -296,7 +297,7 @@ angular.module('d3ngit', ['ngRoute'])
 				preserveAspectRatio: {
 					x: 'xMin xMid xMax'.split(spaces)
 					,y: 'YMin YMid YMax'.split(spaces)
-					,c: 'meet slice'.split(spaces)
+					,c: 'slice meet'.split(spaces)
 				}
 				,width: {value: 800, min: 20, max: 900, step: 10}
 				,height: {value: 700, min: 20, max: 700, step: 10}
